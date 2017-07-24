@@ -1,14 +1,14 @@
-#Data visualization
+# Data visualization
 
-###Objective: 
+### Objective
 * Display of networked nodes with qualitative links
 
-###Inputs: 
+### Inputs
 * Nodes in CSV file
 * Links in CSV file
 
-###Tools: 
+### Tools
 * Network3D library
 
-###Output: 
+### Output
 * A vector graph showing the nodes and links with the numerical details on mouseover event
