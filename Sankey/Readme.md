@@ -10,6 +10,9 @@
 ### Tools
 * `networkD3` library
 
+### Method
+* Show the network of the nodes
+
 ### Output
 * A vector graph showing the nodes and links with the numerical details on mouseover event
 
