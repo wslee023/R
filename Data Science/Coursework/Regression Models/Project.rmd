@@ -1,0 +1,183 @@
+---
+title: "Regression Models Course Project"
+output: pdf_document
+---
+
+## Executive Summary
+Motor Trend, a magazine about the automobile industry, is interested in the following two questions:
+  
+¡§Is an automatic or manual transmission better for MPG¡¨
+¡§Quantify the MPG difference between automatic and manual transmissions¡¨
+
+This report 
+*used the "mtcars" data set,
+*checked the data for mpg from the source data set,
+*tested whether the transmission type causes a significant difference in mpg,
+*built multiple regression models,
+*selected one regression model with aid of ANOVA and coefficients,
+*run the selected models and went through the residuals, and
+*concluded the MPG difference between automatic and manual transmissions.
+
+## Data Processing
+```{r}
+# Load the data
+library(datasets)
+data(mtcars)
+```
+
+With help(mtcars) (See Appendix 1) and the scatter plot of mtcars (Appendix 2), it's shown that mtcars$am is the category variable specifying whether the transmission is automatic or manual.
+
+```{r}
+# Turn the variable for transmission type into a factor
+mtcars$am <- as.factor(mtcars$am)
+levels(mtcars$am) <- c("Automatic", "Manual")
+```
+
+ 
+## Exploratory Data Analysis
+Let's have a look at the dependent variable before the linear regression analysis.
+### Inference: Valid data
+```{r}
+# View mpg
+plot(density(mtcars$mpg), xlab = "MPG", main ="Density Plot of MPG")
+qqnorm(mtcars$mpg, main="Miles per Gallon")
+qqline(mtcars$mpg, col=2)
+```
+
+There is no obvious outliner in the plot. The data shows a similar spread in the direction of the line drawn. It is possible that mtcars$mpg is normally disributed.
+
+Let's check mtcars$mpg against the independent variable, the transmision type.
+
+```{r}
+# View the mpg breakdown by transmission type
+boxplot(mpg ~ am, data = mtcars,
+         col = c("turquoise", "coral"),
+         xlab = "Transmission Type",
+         ylab = "Miles per Gallon",
+         main = "MPG by Transmission Type")
+```
+
+Although the MPG for automatic tranmission is evenly distributed, the box plot suggests that the manual tranmission type leverages more miles per gallon.
+
+## Inference: Hypothesis Test
+From the box plot, the manual transmission type has a higher mean. 
+Let's check whether this is a significant difference.
+
+```{r}
+t.test(mtcars[mtcars$am == "Automatic",]$mpg, mtcars[mtcars$am == "Manual",]$mpg)
+```
+
+The p-value of 0.001374 suggests _there is significant difference in the mean of the automatic transmission type and the manual transmission type._ In other words, 
+the choice between automatic transmission and manual transmission affects mpg. Either one of the two types does better.
+
+## Regression Analysis
+### Build the models and refine with checking coefficients
+Let's get the simple linear regression model considering mpd and the transmission type only. This can be used as reference for model refinement.
+
+```{r}
+# Fit mpg and am only
+simple_model <- lm(mpg~am, data = mtcars)
+summary(simple_model)
+```
+
+Let's consider all the variables.
+```{r}
+# Fit all variables
+full_model <- lm(mpg ~ ., data = mtcars)
+summary(full_model)
+# Compare the 2 models
+anova(simple_model,full_model)
+```
+
+The results of the analysis of variance suggested the 2 models had significant difference. Presumably considering more variables can improve the confidence level of the model, which was reflected on a smaller p-value.
+
+It was unsure that considering some of the variables with higher relevance will further improve the model. To select such variablces as predictors, an analysis of variance model is performed.
+
+```{r}
+# analyse the variables
+all_var <- aov(mpg ~ ., data = mtcars)
+summary(all_var)
+```
+
+The variables with high relevance are cyl, wt, disp, and drat (in descending rank) because they have a p-value smaller than 0.05. After a series of ANOVA analysis,cyl and wt were chosen as the predictors in addition to am.
+
+
+```{r}
+# final linear regression model
+fit <- lm(mpg ~ am + cyl + wt, data = mtcars)
+summary(fit)
+```
+
+The R-square value suggested this model explained over 80% of the variance. The p-value of 6.51e-11 showed the confidence level was improved.
+
+### Residual Plot and Diagnostics
+Let's check the residuals.
+```{r}
+par(mfrow = c(2,2))
+plot(fit)
+```
+
+*_Residuals vs. Fitted plot_:  No obvious band interval or trend observed, matching the independence condition.
+*_Normal Q-Q plot_: There is no apparent outliners (points distant from the regression line). Some points fall below the line and some fall above the line. However the sample size is too small to drop some of the data. The residuals are likely to be normally distributed.
+*_Scale-Location plot_: Even interval band above and below the regression line.
+*_Residual vs Leverage plot_: It exhibited convergence trend despite a outliner at the top right corner.
+
+## Conclusion
+```{r}
+summary(full_model)
+```
+Cars with Manual transmission get more miles per gallon mpg compared to cars with Automatic transmission. (0.17 adjusted by cyl, and wt).
+mpg will decrease by 3.12 (adjusted by cyl, and wt) for every 1000 lb increase in wt.
+mpg will descrease by a factor of 1.51(adjusted by cyl, and wt).
+
+To improve the model, more data is needed to justify the normal distribution hypothesis and residual conditions. Further study on the incremental changes of the independent variables can be performed.
+
+## Appendix
+
+###1. Fields in mtcars
+       *1.  mpg   Miles/(US) gallon                        
+       *2.  cyl   Number of cylinders                      
+       *3.  disp  Displacement (cu.in.)                    
+       *4.  hp    Gross horsepower                         
+       *5.  drat  Rear axle ratio                          
+       *6.  wt    Weight (lb/1000)                         
+       *7.  qsec  1/4 mile time                            
+       *8.  vs    V/S                                      
+       *9.  am    Transmission (0 = automatic, 1 = manual) 
+       *10.  gear  Number of forward gears                  
+       *11.  carb  Number of carburetors 
+       
+###2. Scatterplot of mtcars
+```{r}
+pairs(mtcars)
+```
+
+###3. Selecting the predictors
+```{r}
+# Fit the 1 most significant variables in additional to am
+multi_model1 <- lm(mpg ~ am + cyl, data = mtcars)
+# Fit the 2 most significant variables in additional to am
+multi_model2 <- lm(mpg ~ am + cyl + wt, data = mtcars)
+# Fit the 3 most significant variables in additional to am
+multi_model3 <- lm(mpg ~ am + cyl + wt + disp, data = mtcars)
+# Fit the 4 most significant variables in additional to am
+multi_model4 <- lm(mpg ~ am + cyl + wt + disp + drat, data = mtcars)
+# Check the model summary
+summary(multi_model1)
+summary(multi_model2)
+summary(multi_model3)
+summary(multi_model4)
+# Compare the models to the full model
+anova(multi_model1,full_model)
+anova(multi_model2,full_model)
+anova(multi_model3,full_model)
+anova(multi_model4,full_model)
+# Compare the models to the simple model
+anova(multi_model1,simple_model)
+anova(multi_model2,simple_model)
+anova(multi_model3,simple_model)
+anova(multi_model4,simple_model)
+anova(full_model,simple_model)
+```
+
+The change from simple-model to multi-model2 gave the smallest p-value, suggesting the greatest improvement in confidence level. Therefore the final regression model considered am, cyl, and wt.
