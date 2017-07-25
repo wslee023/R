@@ -1,0 +1,13 @@
+library(networkD3)
+
+##Get Data
+Node <- read.csv(file="<file path of Nodes with \\ escape>", header=TRUE, sep=",")
+Link <- read.csv(file="<file path of Links with \\ escape>", header=TRUE, sep=",")
+
+##Get Chart
+SankeyNetworkGraph <- sankeyNetwork(Links = Link, Nodes = Node, Source = "source",
+             Target = "target", Value = "value", NodeID = "name",
+             units = "sec", fontSize = 12, nodeWidth = 30)
+
+##SaveGraph
+saveNetwork(SankeyNetworkGraph, file = '<file path of output with \\ escape>', selfcontained = FALSE)
