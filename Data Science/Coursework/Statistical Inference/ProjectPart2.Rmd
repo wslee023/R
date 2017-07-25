@@ -1,0 +1,118 @@
+---
+title: "Statistical Inference Course Project Part 2"
+output:
+  pdf_document
+---
+*Lee*
+*25 Jan 2015*
+
+## Summary
+This report uses "ToothGrowth" data set and studies the variables influencing tooth length. Box plots and t-tests are used for the comparisons of the variables.
+
+## Data processing
+```{r}
+# load the data
+data(ToothGrowth) # Data details in Appendix I
+ToothGrowth$dose<-as.factor(ToothGrowth$dose) # factor the variable
+```
+`supp` is a categorical variable and expressed as factor. `dose` can be handled as categorical variable as there are only 3 empirical values. 
+
+## Exploratory data analysis
+```{r}
+# Get the data summary
+summary(ToothGrowth)
+# View the len mean by supp type
+len.mean.bysupp <- aggregate(len ~  supp, data = ToothGrowth, mean);len.mean.bysupp
+# View the len mean by dose
+len.mean.bydose <- aggregate(len ~  dose, data = ToothGrowth, mean);len.mean.bydose
+```
+In the left box plot below, OJ teeth shows a narrower distribution with a higher mean of tooth length. Although VC teeth has a lower mean length, the mean is slightly higher than the median.
+```{r echo=FALSE}
+par(mfrow = c(1, 2))
+# View the len breakdown by supp type
+boxplot(len ~ supp, data = ToothGrowth, col = c("turquoise", "coral"),
+         xlab = "Supplement Type", ylab = "Tooth Length",
+         main = "Tooth Length \nby Supplement Type")
+len.mean.bysupp.oj <- len.mean.bysupp[len.mean.bysupp$supp=="OJ",]$len
+len.mean.bysupp.vc <- len.mean.bysupp[len.mean.bysupp$supp=="VC",]$len
+abline(h=len.mean.bysupp.oj, col="blue", lty=1)
+abline(h=len.mean.bysupp.vc, col="blue", lty=2)
+legend("bottomleft", cex = 0.6, lty=c(1,2), col="blue",
+       legend=c("Mean of OJ type", "Mean of VC type"))
+
+# View the len breakdown by dose type
+boxplot(len ~ dose, data = ToothGrowth, col = c("turquoise", "coral", "slateblue"),
+         xlab = "No. of dose", ylab = "Tooth Length", main = "Tooth Length by Dose")
+len.mean.bydose.half <- len.mean.bydose[len.mean.bydose==0.5,]$len
+len.mean.bydose.one <- len.mean.bydose[len.mean.bydose==1,]$len
+len.mean.bydose.two <- len.mean.bydose[len.mean.bydose==2,]$len
+abline(h=len.mean.bydose.half, col="blue", lty=1)
+abline(h=len.mean.bydose.one, col="blue", lty=2)
+abline(h=len.mean.bydose.two, col="blue", lty=3)
+legend("topleft", cex = 0.6, lty=c(1,2,3), col="blue",
+       legend=c("Mean of 0.5 dose", "Mean of 1 dose", "Mean of 2 doses"))
+```
+From the right box plot, the more doses is taken, the higher mean tooth length is. The mean tooth length is closer to the median as more doses were taken. With incomplete dose, the distribution of the tooth length is more spreaded. It can be implied that a higher number of doses leverage longer tooth length with less variation.
+
+## Confidence intervals and/or tests
+```{r echo=FALSE}
+# test the relationship between len and supp
+t.supp <- t.test(len ~ supp, data = ToothGrowth)
+```
+T-test is performed to test the relationship between `len` and `supp` (Steps in Appendix II). The p-value is greater than 0.05 and the confidence interval contains zero. The null hypothesis cannot be rejected and thus supplement type has no significant effect on tooth length.
+
+```{r echo=FALSE}
+# test the relationship between len and different numbers of doses
+ToothGrowth.exclude.half <- ToothGrowth[ToothGrowth$dose != 0.5,]
+ToothGrowth.exclude.one <- ToothGrowth[ToothGrowth$dose != 1,]
+ToothGrowth.exclude.two <- ToothGrowth[ToothGrowth$dose != 2,]
+t.dose.exludeshalf <- t.test(len ~ dose, data = ToothGrowth.exclude.half)
+t.dose.exludesone <- t.test(len ~ dose, data = ToothGrowth.exclude.one)
+t.dose.exludestwo <- t.test(len ~ dose, data = ToothGrowth.exclude.two)
+```
+T-test is performed to test the relationship between `len` and different values of `dose` (Steps in Appendix II). All the p-values are much smaller than than 0.05 and the confidence interval does not contain zero. The null hypothesis can be rejected and thus the number of dose has significant effect on tooth length.
+
+Let's check the p-values against Family-wise error rate and False discovery rate
+```{r}
+# Collect the p-value of the tests
+pValues <- c(t.supp$p.value,t.dose.exludeshalf$p.value,
+             t.dose.exludesone$p.value,t.dose.exludestwo$p.value)
+pValues;par(mfrow = c(1, 2))
+# Adjust p-values Family-wise error rate
+plot(pValues, p.adjust(pValues, method = "bonferroni"), pch = 4)
+abline(v=0.05, col="red");abline(h=0.05, col="red")
+# Adjust p-values False discovery rate
+plot(pValues, p.adjust(pValues, method = "BH"), pch = 4)
+abline(v=0.05, col="red");abline(h=0.05, col="red")
+```
+The adjusted p-values do not contradict with the result of the t-tests.
+
+## Conclusion
+1. The change in tooth length caused by supplement type is not significant.
+2. The number of doses has significant impact on tooth length. The more doses it takes, the longer tooth length is expected.
+
+## Assumptions
+1. The samples are randomly collected and independent of each other.
+2. The sample size is sufficiently large enought to represent the population.
+3. The supplement type and the number of dose are independent of each other.
+4. For the t-tests, the variances are assumed to be different for the two groups being compared. This assumption is less stronger than the case in which the variances are assumed to be equal.
+
+## Appendix I: Data overview
+```{r}
+# get information about the data
+?ToothGrowth;str(ToothGrowth);pairs(ToothGrowth)
+```
+
+## Appendix II : Test details
+```{r}
+# test the relationship between len and supp
+t.supp <- t.test(len ~ supp, data = ToothGrowth); t.supp
+# test the relationship between len and different numbers of doses
+ToothGrowth.exclude.half <- ToothGrowth[ToothGrowth$dose != 0.5,]
+ToothGrowth.exclude.one <- ToothGrowth[ToothGrowth$dose != 1,]
+ToothGrowth.exclude.two <- ToothGrowth[ToothGrowth$dose != 2,]
+t.dose.exludeshalf <- t.test(len ~ dose, data = ToothGrowth.exclude.half)
+t.dose.exludesone <- t.test(len ~ dose, data = ToothGrowth.exclude.one)
+t.dose.exludestwo <- t.test(len ~ dose, data = ToothGrowth.exclude.two)
+t.dose.exludeshalf;t.dose.exludesone;t.dose.exludestwo
+```

@@ -1,0 +1,83 @@
+---
+title: "Statistical Inference Course Project Part 1"
+output:
+  pdf_document:
+    fig_height: 4
+---
+*Lee*, 
+*25 Jan 2015*
+
+## Overview:
+Central limit theorem suggests the sample means of exponentials follow normal distribution. This report demonstrated this fact by simulation and reporting the key features.
+
+## Part 1: Simulations:
+```{r echo=TRUE}
+set.seed(17);this_lambda<-0.2;this_sample_size<-40 # set seed, lambda and sample size
+# simulate with 40 exponential samples 1000 times
+sim.set <- replicate(1000, rexp(this_sample_size, this_lambda)) # simulate data
+sim.mean <- apply(sim.set, 2, mean)  # get the mean of each simulation
+```
+
+## Sample Mean versus Theoretical Mean:
+Show where the distribution is centered at and compare it  to the theoretical center of the distribution
+```{r echo=TRUE}
+# mean of the means of the simulations and the theoretical center 
+c(mean(sim.mean), 1/this_lambda)
+```
+```{r echo=FALSE}
+hist(sim.mean, probability=T, breaks=30, main="Distribution of the mean of 40 exponentials \nin 1,000 simulations with lambda= 0.2", ylim=c(0, 0.5), col="light grey")
+abline(v=mean(sim.mean), col="red")
+abline(v=1/this_lambda, col="blue", lty=2)
+lines(density(sim.mean), col="red")
+x<-seq(min(sim.mean), max(sim.mean),1000)
+curve(dnorm(x, mean=mean(sim.mean), sd=sd(sim.mean)), add=TRUE, col="blue", lty=2)
+legend("topright", legend=c("Simulation", "Theoritcal"), lty=c(1,2), col=c("red", "blue"),cex = 0.75)
+mtext("Figure 1", 1, adj=1, line=4)
+```
+The center of distribution of the mean of 40 exponentials is close to the theoretical center of the distribution. This is supported with Figure 1.
+
+## Sample Variance versus Theoretical Variance:
+Show how variable it is and compare it to the theoretical variance of the distribution
+```{r echo=TRUE}
+# Compare the standard deviation and variance in the sample and theory
+matrix(c(sd(sim.mean), (1/this_lambda)/sqrt(this_sample_size),var(sim.mean), 
+         1/((this_lambda^2) * this_sample_size)),ncol=2,byrow=TRUE, 
+       dimnames=list(c("Standard deviation","Variance"), c("Sample", "Theory")))
+```
+The standard deviation and the variance in the sample and theory are close. The standard devidation in the samples are slightly greater than that of the theory as shown in Figure 2.
+
+```{r echo=FALSE}
+sample_sd <- (1/this_lambda)/sqrt(this_sample_size)
+this_sd <- sd(sim.mean)
+hist(sim.mean, probability=T, breaks=30, main="Distribution of the mean of 40 exponentials \nin 1,000 simulations with lambda= 0.2", ylim=c(0, 0.5), col="light grey")
+x<-seq(min(sim.mean), max(sim.mean),1000)
+curve(dnorm(x, mean=mean(sim.mean), sd=sd(sim.mean)), add=TRUE, col="blue", lty=2)
+legend("topright", legend=c("Simulation", "Theoritcal"), lty=c(1,2), col=c("red", "blue"),cex = 0.75)
+lines(density(sim.mean), col="red")
+abline(v=mean(sim.mean), col="red")
+abline(v=mean(sim.mean)+sample_sd, col="red")
+abline(v=mean(sim.mean)-sample_sd, col="red")
+abline(v=mean(sim.mean)+(2*sample_sd), col="red")
+abline(v=mean(sim.mean)-(2*sample_sd), col="red")
+abline(v=mean(sim.mean)+(3*sample_sd), col="red")
+abline(v=mean(sim.mean)-(3*sample_sd), col="red")
+abline(v=1/this_lambda, col="blue", lty=2)
+abline(v=(1/this_lambda)+this_sd, col="blue", lty=2)
+abline(v=(1/this_lambda)-this_sd, col="blue", lty=2)
+abline(v=(1/this_lambda)+(2*this_sd), col="blue", lty=2)
+abline(v=(1/this_lambda)-(2*this_sd), col="blue", lty=2)
+abline(v=(1/this_lambda)+(3*this_sd), col="blue", lty=2)
+abline(v=(1/this_lambda)-(3*this_sd), col="blue", lty=2)
+mtext("Figure 2", 1, adj=1, line=4)
+```
+
+## Distribution:
+Figure 1 shows the simulated sample means are close to a normal distribution. Figure 3 compares the 1,000 sample means of 40 exponentials to a normal distribution and suggests the distribution of the means are close to a normal distribution.
+
+```{r echo=FALSE}
+# Compare the distribution of averages of 40 exponentials to a normal distribution
+qqnorm(sim.mean, main="Distribution of the means of 40 exponentials")
+qqline(sim.mean, col = "red")
+legend("bottomright", legend="Normal Distribution", lty=1, col="red",cex = 0.75)
+mtext("Figure 3", 1, adj=1, line=4)
+```
