@@ -1,4 +1,1 @@
-# R
-Works in R
-
-Data visualisation in R
+# Data manipulations using R Studio and/or R
